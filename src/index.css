@@ -1,0 +1,51 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --color-gold: #D4AF37;
+  --color-gold-light: #F9E79F;
+  --color-gold-dark: #9C640C;
+  --color-titanium-dark: #1C1C1E;
+  --color-titanium-deep: #0f172a;
+  --color-deep-indigo: #1e1b4b;
+  --color-cosmic-purple: #4338ca;
+}
+
+@layer base {
+  body {
+    @apply bg-slate-900 text-white antialiased selection:bg-gold/30;
+  }
+}
+
+.shadow-premium {
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5);
+}
+
+.shadow-raised {
+  box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.border-gold-gradient {
+  border: 2px solid transparent;
+  background: linear-gradient(#1e1b4b, #1e1b4b) padding-box,
+              linear-gradient(135deg, #FFD700, #D4AF37, #9C640C) border-box;
+}
+
+.glass-iphone-dark {
+  background: rgba(30, 41, 59, 0.5);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.iridescent-border {
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.gold-glow {
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+}
+
+.gold-glow-button {
+  box-shadow: 0 10px 25px -5px rgba(212, 175, 55, 0.4);
+}
