@@ -225,15 +225,15 @@ export default function App() {
           {/* Trust Markers */}
           <section className="grid grid-cols-3 gap-2 px-1">
             <div className="flex flex-col items-center text-center gap-1">
-              <div className="text-gold font-black text-sm italic">15Y+</div>
+              <div className="h-5 flex items-center justify-center text-gold font-black text-sm italic">15Y+</div>
               <div className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">Experience</div>
             </div>
             <div className="flex flex-col items-center text-center gap-1 border-x border-white/5">
-              <div className="text-gold font-black text-sm italic">1000+</div>
+              <div className="h-5 flex items-center justify-center text-gold font-black text-sm italic">1000+</div>
               <div className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">Happy Clients</div>
             </div>
             <div className="flex flex-col items-center text-center gap-1">
-              <div className="flex items-center gap-0.5">
+              <div className="h-5 flex items-center justify-center gap-0.5">
                 {[1, 2, 3, 4, 5].map((s) => <Star key={s} className="w-2 h-2 text-gold fill-gold" />)}
               </div>
               <div className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">Google Reviews</div>
