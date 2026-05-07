@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Carpet Cleaning — Price Calculator</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0b1120;
+      --card: #111827;
+      --border: rgba(255,255,255,0.08);
+      --accent: #3b82f6;
+      --accent2: #60a5fa;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --sub: #64748b;
+      --green: #34d399;
+    }
+
+    html, body { min-height: 100%; overflow-x: hidden; }
+
+    body {
+      background: radial-gradient(ellipse at 30% 20%, #0f1f3d 0%, #080f1e 50%, #060b15 100%);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 32px 20px 48px;
+    }
+
+    .blob {
+      position: fixed; border-radius: 50%;
+      filter: blur(90px); pointer-events: none; z-index: 0;
+    }
+    .blob-1 {
+      width: 520px; height: 520px;
+      background: radial-gradient(circle, rgba(59,130,246,0.14), transparent 70%);
+      top: -160px; left: -120px;
+    }
+    .blob-2 {
+      width: 360px; height: 360px;
+      background: radial-gradient(circle, rgba(99,102,241,0.1), transparent 70%);
+      bottom: -100px; right: -80px;
+    }
+
+    .page {
+      position: relative; z-index: 1;
+      width: 100%; max-width: 560px;
+      display: flex; flex-direction: column; gap: 20px;
+    }
+
+    /* ── header ── */
+    .header {
+      text-align: center;
+      animation: fadeUp 0.6s cubic-bezier(0.22,1,0.36,1) both;
+    }
+    .header-icon {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 56px; height: 56px; border-radius: 16px;
+      background: linear-gradient(145deg, rgba(59,130,246,0.2), rgba(99,102,241,0.15));
+      border: 1px solid rgba(59,130,246,0.25);
+      margin-bottom: 14px;
+      box-shadow: 0 8px 24px rgba(59,130,246,0.15);
+    }
+    .header-icon svg { width: 28px; height: 28px; fill: none; stroke: var(--accent2); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+    .header h1 {
+      font-size: clamp(1.5rem, 5vw, 1.9rem);
+      font-weight: 700; letter-spacing: -0.3px; color: var(--text);
+      margin-bottom: 6px;
+    }
+    .header p {
+      font-size: 0.78rem; letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--sub);
+    }
+    .header p em { font-style: normal; color: var(--accent2); opacity: 0.85; }
+
+    /* ── card ── */
+    .card {
+      background: linear-gradient(145deg, #131f35, #0d1829);
+      border: 1px solid rgba(59,130,246,0.15);
+      border-radius: 24px;
+      padding: 28px;
+      box-shadow:
+        0 0 0 1px rgba(59,130,246,0.05),
+        0 32px 80px rgba(0,0,0,0.6),
+        0 0 60px rgba(59,130,246,0.05) inset;
+      animation: fadeUp 0.7s cubic-bezier(0.22,1,0.36,1) both;
+      animation-delay: 0.08s;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(22px) scale(0.97); }
+      to   { opacity: 1; transform: none; }
+    }
+
+    /* ── section label ── */
+    .section-label {
+      font-size: 0.7rem; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--sub); margin-bottom: 12px; margin-top: 24px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .section-label:first-child { margin-top: 0; }
+    .section-label::after {
+      content: ''; flex: 1; height: 1px;
+      background: linear-gradient(to right, rgba(255,255,255,0.07), transparent);
+    }
+
+    /* ── rooms grid ── */
+    .rooms-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .room-item {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 14px 12px;
+      cursor: pointer;
+      transition: all 0.22s cubic-bezier(0.34,1.56,0.64,1);
+      user-select: none;
+      position: relative;
+      overflow: hidden;
+    }
+    .room-item::before {
+      content: '';
+      position: absolute; inset: 0; border-radius: 14px;
+      background: linear-gradient(135deg, rgba(59,130,246,0.12), rgba(99,102,241,0.06));
+      opacity: 0; transition: opacity 0.2s;
+    }
+    .room-item:hover { transform: translateY(-2px); border-color: rgba(59,130,246,0.3); }
+    .room-item.active {
+      border-color: rgba(59,130,246,0.55);
+      box-shadow: 0 0 0 1px rgba(59,130,246,0.2), 0 8px 24px rgba(59,130,246,0.12);
+    }
+    .room-item.active::before { opacity: 1; }
+
+    .room-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .room-icon {
+      width: 30px; height: 30px; border-radius: 8px;
+      background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.2);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--accent2); flex-shrink: 0;
+    }
+    .room-icon svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+    .room-check {
+      width: 18px; height: 18px; border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.15);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; transition: all 0.2s;
+    }
+    .room-item.active .room-check {
+      background: var(--accent); border-color: var(--accent);
+    }
+    .room-check svg { width: 10px; height: 10px; stroke: #fff; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; opacity: 0; transition: opacity 0.15s; fill: none; }
+    .room-item.active .room-check svg { opacity: 1; }
+
+    .room-name {
+      font-size: 0.83rem; font-weight: 600; color: var(--text);
+      margin-bottom: 2px;
+    }
+    .room-size {
+      font-size: 0.72rem; color: var(--sub);
+    }
+
+    .room-qty {
+      display: flex; align-items: center; gap: 6px; margin-top: 10px;
+    }
+    .qty-btn {
+      width: 24px; height: 24px; border-radius: 50%;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: var(--muted); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem; line-height: 1;
+      transition: all 0.18s;
+    }
+    .qty-btn:hover { background: rgba(59,130,246,0.15); border-color: rgba(59,130,246,0.35); color: var(--accent2); }
+    .qty-val {
+      font-size: 0.82rem; font-weight: 700; color: var(--text);
+      min-width: 16px; text-align: center;
+    }
+    .room-price {
+      margin-left: auto; font-size: 0.78rem;
+      font-weight: 600; color: var(--accent2);
+    }
+
+    /* ── addons ── */
+    .addons { display: flex; flex-direction: column; gap: 8px; }
+
+    .addon-item {
+      display: flex; align-items: center; gap: 12px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      user-select: none;
+    }
+    .addon-item:hover { border-color: rgba(59,130,246,0.3); }
+    .addon-item.active {
+      border-color: rgba(59,130,246,0.5);
+      background: rgba(59,130,246,0.06);
+    }
+
+    .addon-check {
+      width: 20px; height: 20px; border-radius: 6px; flex-shrink: 0;
+      border: 2px solid rgba(255,255,255,0.15);
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+    }
+    .addon-item.active .addon-check {
+      background: var(--accent); border-color: var(--accent);
+    }
+    .addon-check svg { width: 11px; height: 11px; stroke: #fff; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; opacity: 0; transition: opacity 0.15s; fill: none; }
+    .addon-item.active .addon-check svg { opacity: 1; }
+
+    .addon-info { flex: 1; }
+    .addon-name { font-size: 0.85rem; font-weight: 500; color: var(--text); }
+    .addon-desc { font-size: 0.72rem; color: var(--sub); margin-top: 1px; }
+    .addon-price { font-size: 0.82rem; font-weight: 600; color: var(--accent2); white-space: nowrap; }
+
+    /* ── price card ── */
+    .price-card {
+      background: linear-gradient(145deg, rgba(59,130,246,0.08), rgba(99,102,241,0.05));
+      border: 1px solid rgba(59,130,246,0.2);
+      border-radius: 18px; padding: 22px 24px;
+      animation: fadeUp 0.7s cubic-bezier(0.22,1,0.36,1) both;
+      animation-delay: 0.16s;
+    }
+
+    .price-rows { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+    .price-row {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 0.83rem; color: var(--muted);
+    }
+    .price-row .val { color: var(--text); font-weight: 500; }
+    .price-divider { height: 1px; background: rgba(255,255,255,0.07); margin: 4px 0; }
+
+    .price-total {
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .price-total-label { font-size: 0.88rem; color: var(--muted); font-weight: 500; }
+    .price-total-val {
+      font-size: 2rem; font-weight: 800; letter-spacing: -1px;
+      background: linear-gradient(135deg, var(--accent2), #818cf8);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      transition: all 0.3s;
+    }
+    .price-note {
+      font-size: 0.71rem; color: var(--sub); margin-top: 8px;
+    }
+
+    /* ── CTA ── */
+    .cta {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%;
+      padding: 14px 20px;
+      border-radius: 50px; border: none;
+      background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 60%, #4f46e5 100%);
+      background-size: 200% 200%;
+      color: #fff;
+      font-size: 0.97rem; font-weight: 600; letter-spacing: 0.02em;
+      text-decoration: none; cursor: pointer;
+      box-shadow: 0 4px 18px rgba(59,130,246,0.4);
+      animation: ctaGrad 4s ease-in-out infinite alternate, fadeUp 0.8s cubic-bezier(0.22,1,0.36,1) both 0.22s;
+      transition: transform 0.22s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s;
+      position: relative; overflow: hidden;
+    }
+    @keyframes ctaGrad {
+      0%   { background-position: 0% 50%; }
+      100% { background-position: 100% 50%; }
+    }
+    .cta::before {
+      content: '';
+      position: absolute; top: -50%; left: -60%;
+      width: 35%; height: 200%;
+      background: rgba(255,255,255,0.18);
+      transform: skewX(-22deg);
+      animation: sheen 3s ease-in-out infinite;
+    }
+    @keyframes sheen { 0% { left: -60%; } 100% { left: 130%; } }
+    .cta:hover { transform: translateY(-2px) scale(1.01); box-shadow: 0 10px 30px rgba(59,130,246,0.5); }
+    .cta:active { transform: scale(0.98); }
+    .cta svg { flex-shrink: 0; width: 18px; height: 18px; fill: currentColor; }
+
+    .empty-state {
+      font-size: 0.82rem; color: var(--sub); text-align: center;
+      padding: 6px 0 2px;
+    }
+
+    @media (max-width: 420px) {
+      .rooms-grid { grid-template-columns: 1fr; }
+      body { padding: 24px 16px 40px; }
+      .card { padding: 22px 18px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+
+<div class="page">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-icon">
+      <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M6 7V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2"/><path d="M12 12v4"/><path d="M9 14h6"/></svg>
+    </div>
+    <h1>Carpet Cleaning</h1>
+    <p>DALY CITY &amp; SAN FRANCISCO&nbsp;<em>✦</em>&nbsp;PRICE CALCULATOR</p>
+  </div>
+
+  <!-- Calculator card -->
+  <div class="card">
+
+    <div class="section-label">Select Rooms</div>
+
+    <div class="rooms-grid" id="roomsGrid">
+
+      <div class="room-item" data-room="living" data-base="90">
+        <div class="room-header">
+          <div class="room-icon">
+            <svg viewBox="0 0 24 24"><rect x="2" y="8" width="20" height="12" rx="2"/><path d="M6 8V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2"/><path d="M2 14h20"/></svg>
+          </div>
+          <div class="room-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        </div>
+        <div class="room-name">Living Room</div>
+        <div class="room-size">up to 300 sq ft</div>
+        <div class="room-qty">
+          <button class="qty-btn minus" onclick="changeQty(event,'living',-1)">−</button>
+          <span class="qty-val" id="qty-living">1</span>
+          <button class="qty-btn plus" onclick="changeQty(event,'living',1)">+</button>
+          <span class="room-price">$90 / room</span>
+        </div>
+      </div>
+
+      <div class="room-item" data-room="master" data-base="70">
+        <div class="room-header">
+          <div class="room-icon">
+            <svg viewBox="0 0 24 24"><path d="M2 20V8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12"/><path d="M2 14h20"/><path d="M7 14v6"/><path d="M17 14v6"/></svg>
+          </div>
+          <div class="room-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        </div>
+        <div class="room-name">Master Bedroom</div>
+        <div class="room-size">up to 200 sq ft</div>
+        <div class="room-qty">
+          <button class="qty-btn minus" onclick="changeQty(event,'master',-1)">−</button>
+          <span class="qty-val" id="qty-master">1</span>
+          <button class="qty-btn plus" onclick="changeQty(event,'master',1)">+</button>
+          <span class="room-price">$70 / room</span>
+        </div>
+      </div>
+
+      <div class="room-item" data-room="bedroom" data-base="55">
+        <div class="room-header">
+          <div class="room-icon">
+            <svg viewBox="0 0 24 24"><path d="M3 20V9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v11"/><path d="M3 13h18"/><path d="M8 7V5"/><path d="M16 7V5"/></svg>
+          </div>
+          <div class="room-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        </div>
+        <div class="room-name">Bedroom</div>
+        <div class="room-size">up to 150 sq ft</div>
+        <div class="room-qty">
+          <button class="qty-btn minus" onclick="changeQty(event,'bedroom',-1)">−</button>
+          <span class="qty-val" id="qty-bedroom">1</span>
+          <button class="qty-btn plus" onclick="changeQty(event,'bedroom',1)">+</button>
+          <span class="room-price">$55 / room</span>
+        </div>
+      </div>
+
+      <div class="room-item" data-room="dining" data-base="50">
+        <div class="room-header">
+          <div class="room-icon">
+            <svg viewBox="0 0 24 24"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>
+          </div>
+          <div class="room-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        </div>
+        <div class="room-name">Dining Room</div>
+        <div class="room-size">up to 150 sq ft</div>
+        <div class="room-qty">
+          <button class="qty-btn minus" onclick="changeQty(event,'dining',-1)">−</button>
+          <span class="qty-val" id="qty-dining">1</span>
+          <button class="qty-btn plus" onclick="changeQty(event,'dining',1)">+</button>
+          <span class="room-price">$50 / room</span>
+        </div>
+      </div>
+
+      <div class="room-item" data-room="hallway" data-base="40">
+        <div class="room-header">
+          <div class="room-icon">
+            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/></svg>
+          </div>
+          <div class="room-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        </div>
+        <div class="room-name">Hallway</div>
+        <div class="room-size">up to 80 sq ft</div>
+        <div class="room-qty">
+          <button class="qty-btn minus" onclick="changeQty(event,'hallway',-1)">−</button>
+          <span class="qty-val" id="qty-hallway">1</span>
+          <button class="qty-btn plus" onclick="changeQty(event,'hallway',1)">+</button>
+          <span class="room-price">$40 / room</span>
+        </div>
+      </div>
+
+      <div class="room-item" data-room="stairs" data-base="60">
+        <div class="room-header">
+          <div class="room-icon">
+            <svg viewBox="0 0 24 24"><polyline points="4 20 4 14 10 14 10 8 16 8 16 4 20 4"/><line x1="4" y1="20" x2="20" y2="20"/></svg>
+          </div>
+          <div class="room-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        </div>
+        <div class="room-name">Stairs</div>
+        <div class="room-size">up to 15 steps</div>
+        <div class="room-qty">
+          <button class="qty-btn minus" onclick="changeQty(event,'stairs',-1)">−</button>
+          <span class="qty-val" id="qty-stairs">1</span>
+          <button class="qty-btn plus" onclick="changeQty(event,'stairs',1)">+</button>
+          <span class="room-price">$60 / flight</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Add-ons -->
+    <div class="section-label" style="margin-top:28px">Add-ons</div>
+    <div class="addons">
+
+      <div class="addon-item" data-addon="deep" data-type="pct" data-val="40">
+        <div class="addon-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="addon-info">
+          <div class="addon-name">Deep Clean</div>
+          <div class="addon-desc">Hot water extraction, heavy soil removal</div>
+        </div>
+        <div class="addon-price">+40%</div>
+      </div>
+
+      <div class="addon-item" data-addon="pet" data-type="flat" data-val="35">
+        <div class="addon-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="addon-info">
+          <div class="addon-name">Pet Treatment</div>
+          <div class="addon-desc">Enzyme treatment for odors & stains</div>
+        </div>
+        <div class="addon-price">+$35</div>
+      </div>
+
+      <div class="addon-item" data-addon="stain" data-type="flat" data-val="30">
+        <div class="addon-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="addon-info">
+          <div class="addon-name">Stain Removal</div>
+          <div class="addon-desc">Targeted spot treatment per area</div>
+        </div>
+        <div class="addon-price">+$30</div>
+      </div>
+
+      <div class="addon-item" data-addon="deodor" data-type="flat" data-val="25">
+        <div class="addon-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="addon-info">
+          <div class="addon-name">Deodorizer</div>
+          <div class="addon-desc">Neutralizes odors, fresh scent finish</div>
+        </div>
+        <div class="addon-price">+$25</div>
+      </div>
+
+      <div class="addon-item" data-addon="scotch" data-type="pct" data-val="20">
+        <div class="addon-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="addon-info">
+          <div class="addon-name">Scotchgard Protection</div>
+          <div class="addon-desc">Stain-resistant fabric protector coating</div>
+        </div>
+        <div class="addon-price">+20%</div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Price Summary -->
+  <div class="price-card">
+    <div class="price-rows" id="priceRows">
+      <div class="empty-state" id="emptyState">Select rooms above to see pricing</div>
+    </div>
+    <div class="price-divider" id="divider" style="display:none"></div>
+    <div class="price-total" style="margin-top:4px">
+      <div class="price-total-label">Estimated Total</div>
+      <div class="price-total-val" id="totalVal">$0</div>
+    </div>
+    <div class="price-note">* Final price confirmed on-site. Minimum charge $250.</div>
+  </div>
+
+  <!-- CTA -->
+  <a class="cta" href="tel:+14155551234">
+    <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.91a16 16 0 0 0 6 6l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+    Call for Free Quote
+  </a>
+
+</div>
+
+<script>
+  const rooms = {};
+  const addons = new Set();
+
+  const PRICES = {
+    living:  90, master: 70, bedroom: 55,
+    dining:  50, hallway: 40, stairs:  60,
+  };
+
+  // Room toggle & qty
+  document.querySelectorAll('.room-item').forEach(el => {
+    el.addEventListener('click', e => {
+      if (e.target.closest('.qty-btn')) return;
+      const key = el.dataset.room;
+      if (rooms[key]) {
+        delete rooms[key];
+        el.classList.remove('active');
+      } else {
+        rooms[key] = parseInt(el.querySelector('.qty-val').textContent);
+        el.classList.add('active');
+      }
+      updatePrice();
+    });
+  });
+
+  function changeQty(e, key, delta) {
+    e.stopPropagation();
+    const el = document.querySelector(`[data-room="${key}"]`);
+    const span = document.getElementById(`qty-${key}`);
+    let cur = parseInt(span.textContent);
+    cur = Math.max(1, Math.min(10, cur + delta));
+    span.textContent = cur;
+    if (rooms[key] !== undefined) {
+      rooms[key] = cur;
+      updatePrice();
+    }
+  }
+
+  // Addon toggle
+  document.querySelectorAll('.addon-item').forEach(el => {
+    el.addEventListener('click', () => {
+      const key = el.dataset.addon;
+      if (addons.has(key)) {
+        addons.delete(key);
+        el.classList.remove('active');
+      } else {
+        addons.add(key);
+        el.classList.add('active');
+      }
+      updatePrice();
+    });
+  });
+
+  // Price calc
+  function updatePrice() {
+    const rows = document.getElementById('priceRows');
+    const empty = document.getElementById('emptyState');
+    const divider = document.getElementById('divider');
+    const totalEl = document.getElementById('totalVal');
+
+    const activeRooms = Object.entries(rooms);
+    rows.innerHTML = '';
+
+    if (!activeRooms.length && !addons.size) {
+      rows.innerHTML = '<div class="empty-state">Select rooms above to see pricing</div>';
+      divider.style.display = 'none';
+      totalEl.textContent = '$0';
+      return;
+    }
+
+    let base = 0;
+
+    // Room rows
+    activeRooms.forEach(([key, qty]) => {
+      const price = PRICES[key] * qty;
+      base += price;
+      const label = {
+        living: 'Living Room', master: 'Master Bedroom', bedroom: 'Bedroom',
+        dining: 'Dining Room', hallway: 'Hallway', stairs: 'Stairs'
+      }[key];
+      rows.appendChild(makeRow(qty > 1 ? `${label} ×${qty}` : label, `$${price}`));
+    });
+
+    // Addon rows (flat)
+    let flatExtra = 0;
+    addons.forEach(key => {
+      const el = document.querySelector(`[data-addon="${key}"]`);
+      if (el.dataset.type === 'flat') {
+        const val = parseInt(el.dataset.val);
+        flatExtra += val;
+        const name = el.querySelector('.addon-name').textContent;
+        rows.appendChild(makeRow(name, `+$${val}`));
+      }
+    });
+
+    // Addon rows (pct — applied after flat)
+    let pctMult = 1;
+    addons.forEach(key => {
+      const el = document.querySelector(`[data-addon="${key}"]`);
+      if (el.dataset.type === 'pct') {
+        const val = parseInt(el.dataset.val) / 100;
+        pctMult += val;
+        const name = el.querySelector('.addon-name').textContent;
+        rows.appendChild(makeRow(name, `+${parseInt(el.dataset.val)}%`));
+      }
+    });
+
+    const total = Math.max(250, Math.round((base + flatExtra) * pctMult));
+    divider.style.display = 'block';
+    totalEl.textContent = `$${total}`;
+  }
+
+  function makeRow(label, val) {
+    const div = document.createElement('div');
+    div.className = 'price-row';
+    div.innerHTML = `<span>${label}</span><span class="val">${val}</span>`;
+    return div;
+  }
+</script>
+
+</body>
+</html>
