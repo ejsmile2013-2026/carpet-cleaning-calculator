@@ -16,6 +16,21 @@ import {
 type ResidenceType = 'house' | 'apartment';
 type City = 'daly-city' | 'sf' | 'vicinity';
 
+// ─── НАСТРОЙКИ — меняй здесь, больше нигде ───────────────────────────────────
+const PHONE = "415-756-9422";
+
+const PRICES = {
+  base:           75,   // базовая цена ($)
+  apartment:      30,   // доплата за квартиру ($)
+  sf:             50,   // доплата за San Francisco ($)
+  vicinity:       25,   // доплата за Vicinity ($)
+  perFloor:       15,   // доплата за каждый этаж выше 1-го ($)
+  perRoom:        40,   // доплата за каждую комнату ($)
+  perSqM:        1.5,   // доплата за каждый m² ($)
+  minimum:       250,   // минимальная итоговая цена ($)
+};
+// ─────────────────────────────────────────────────────────────────────────────
+
 export default function App() {
   const [residence, setResidence] = useState<ResidenceType>('house');
   const [city, setCity] = useState<City>('daly-city');
@@ -25,28 +40,27 @@ export default function App() {
   const [result, setResult] = useState<number | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
 
-  const phoneNumber = "415-756-9422";
+  const phoneNumber = PHONE;
 
   const calculateTotal = () => {
     setIsCalculating(true);
     setResult(null);
 
     setTimeout(() => {
-      let total = 75;
+      let total = PRICES.base;
 
-      if (residence === 'apartment') total += 30;
+      if (residence === 'apartment') total += PRICES.apartment;
 
       switch (city) {
-        case 'sf': total += 50; break;
-        case 'vicinity': total += 25; break;
-        default: total += 0;
+        case 'sf':       total += PRICES.sf;       break;
+        case 'vicinity': total += PRICES.vicinity;  break;
       }
 
-      if (floor > 1) total += (floor - 1) * 15;
-      total += rooms * 40;
-      total += area * 1.5;
+      if (floor > 1) total += (floor - 1) * PRICES.perFloor;
+      total += rooms * PRICES.perRoom;
+      total += area  * PRICES.perSqM;
 
-      setResult(Math.max(250, Math.round(total)));
+      setResult(Math.max(PRICES.minimum, Math.round(total)));
       setIsCalculating(false);
     }, 800);
   };
